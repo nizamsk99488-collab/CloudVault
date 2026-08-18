@@ -7,7 +7,6 @@ function Dashboard() {
   const fileInputRef = useRef(null);
 
   const user = JSON.parse(localStorage.getItem("user"));
-
   const [files, setFiles] = useState([]);
 
   useEffect(() => {
@@ -16,7 +15,7 @@ function Dashboard() {
     }
   }, []);
 
-  // Fetch only logged-in user's files
+  // Fetch user's files
   const fetchFiles = async () => {
     try {
       const res = await axios.get(
@@ -58,12 +57,13 @@ function Dashboard() {
       );
 
       alert(res.data.message);
-
       fetchFiles();
     } catch (err) {
       console.log(err);
       alert("File Upload Failed");
     }
+
+    e.target.value = "";
   };
 
   // Download file
@@ -88,7 +88,6 @@ function Dashboard() {
       );
 
       alert(res.data.message);
-
       fetchFiles();
     } catch (err) {
       console.log(err);
@@ -100,31 +99,39 @@ function Dashboard() {
     <div className="min-h-screen bg-gray-100">
 
       {/* Navbar */}
-      <div className="bg-white shadow-md p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-blue-600">
+      <div className="bg-white shadow-md px-4 sm:px-6 py-4 flex justify-between items-center">
+        <h1 className="text-xl sm:text-2xl font-bold text-blue-600">
           CloudVault
         </h1>
 
         <button
           onClick={handleLogout}
-          className="bg-red-500 text-white px-4 py-2 rounded-lg"
+          className="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base"
         >
           Logout
         </button>
       </div>
 
       {/* Main */}
-      <div className="p-10">
+      <div className="px-4 sm:px-6 md:px-10 py-6 sm:py-10">
 
-        <h2 className="text-3xl font-bold mb-6">
-          Welcome, {user?.name} 👋
-        </h2>
+        {/* Welcome */}
+        <div className="mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold">
+            Welcome, {user?.name} 👋
+          </h2>
 
+          <p className="text-gray-500 mt-2">
+            Manage your files easily.
+          </p>
+        </div>
+
+        {/* Upload Button */}
         <button
           onClick={handleUploadClick}
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg mb-6"
+          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg mb-6"
         >
-          Upload File
+          ☁️ Upload File
         </button>
 
         <input
@@ -134,41 +141,63 @@ function Dashboard() {
           onChange={handleFileChange}
         />
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="text-2xl font-bold mb-4">
+        {/* Files Section */}
+        <div className="bg-white rounded-xl shadow p-4 sm:p-6">
+
+          <h3 className="text-xl sm:text-2xl font-bold mb-4">
             My Files
           </h3>
 
           {files.length === 0 ? (
-            <p>No files uploaded.</p>
+            <div className="text-center py-10 text-gray-500">
+              <p className="text-4xl mb-3">📂</p>
+              <p>No files uploaded.</p>
+            </div>
           ) : (
-            files.map((file) => (
-              <div
-                key={file._id}
-                className="flex justify-between items-center border-b py-3"
-              >
-                <span>📄 {file.fileName}</span>
+            <div className="space-y-3">
 
-                <div className="space-x-2">
-                  <button
-                    onClick={() => handleDownload(file._id)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg"
-                  >
-                    Download
-                  </button>
+              {files.map((file) => (
+                <div
+                  key={file._id}
+                  className="border rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                >
 
-                  <button
-                    onClick={() => handleDelete(file._id)}
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg"
-                  >
-                    Delete
-                  </button>
+                  {/* File Name */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-2xl">
+                      📄
+                    </span>
+
+                    <span className="font-medium truncate">
+                      {file.fileName}
+                    </span>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex gap-2 w-full sm:w-auto">
+
+                    <button
+                      onClick={() => handleDownload(file._id)}
+                      className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm"
+                    >
+                      Download
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(file._id)}
+                      className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm"
+                    >
+                      Delete
+                    </button>
+
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))}
 
+            </div>
+          )}
+
+        </div>
       </div>
     </div>
   );
