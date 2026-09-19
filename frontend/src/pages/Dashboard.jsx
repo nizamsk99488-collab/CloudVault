@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+const API_URL = "https://cloudvault-1cuo.onrender.com";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ function Dashboard() {
   const fetchFiles = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/files?userId=${user._id}`
+        `${API_URL}/api/files?userId=${user._id}`
       );
 
       setFiles(res.data);
@@ -52,7 +53,7 @@ function Dashboard() {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/files/upload",
+        `${API_URL}/api/files/upload`,
         formData
       );
 
@@ -69,7 +70,7 @@ function Dashboard() {
   // Download file
   const handleDownload = (id) => {
     window.open(
-      `http://localhost:5000/api/files/download/${id}`,
+      `${API_URL}/api/files/download/${id}`,
       "_blank"
     );
   };
@@ -84,7 +85,7 @@ function Dashboard() {
 
     try {
       const res = await axios.delete(
-        `http://localhost:5000/api/files/${id}`
+        `${API_URL}/api/files/${id}`
       );
 
       alert(res.data.message);
@@ -196,7 +197,7 @@ function Dashboard() {
 
             </div>
           )}
-
+ 
         </div>
       </div>
     </div>

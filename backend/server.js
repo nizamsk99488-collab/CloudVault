@@ -15,12 +15,6 @@ app.use(express.json());
 // Serve uploaded files
 app.use("/uploads", express.static("uploads"));
 
-// MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log(err));
-
 // Home Route
 app.get("/", (req, res) => {
   res.send("CloudVault Backend is Running 🚀");
@@ -30,9 +24,29 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/files", fileRoutes);
 
-// Start Server
+// Start server only after MongoDB connects
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+const startServer = async () => {
+  try {
+    console.log("Connecting to MongoDB...");
+
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 10000,
+    });
+
+    console.log("✅ MongoDB Connected");
+    console.log("MongoDB readyState:", mongoose.connection.readyState);
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
+
+  } catch (error) {
+    console.error("❌ MongoDB Connection Failed:");
+    console.error(error.message);
+    process.exit(1);
+  }
+};
+
+startServer();

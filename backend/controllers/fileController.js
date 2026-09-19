@@ -103,6 +103,6 @@ const deleteFile = async (req, res) => {
 module.exports = {
   uploadFile,
   getFiles,
-  downloadFile,
+  downloadFile, 
   deleteFile,
 };

@@ -2,6 +2,8 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = "https://cloudvault-1cuo.onrender.com";
+
 function Login() {
   const navigate = useNavigate();
 
@@ -13,7 +15,7 @@ function Login() {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        `${API_URL}/api/auth/login`,
         {
           email,
           password,
@@ -27,19 +29,20 @@ function Login() {
       navigate("/dashboard");
     } catch (err) {
       console.log(err);
-
       alert(err.response?.data?.message || "Login Failed");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+
       <form
         onSubmit={handleLogin}
-        className="bg-white p-8 rounded-xl shadow-lg w-96"
+        className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md"
       >
+
         <h1 className="text-3xl font-bold text-center mb-6">
-          Login
+          CloudVault Login
         </h1>
 
         <input
@@ -54,11 +57,22 @@ function Login() {
         <input
           type="password"
           placeholder="Enter Password"
-          className="w-full p-3 border rounded-lg mb-6"
+          className="w-full p-3 border rounded-lg mb-2"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+
+        {/* Forgot Password */}
+        <div className="text-right mb-6">
+          <button
+            type="button"
+            onClick={() => navigate("/forgot-password")}
+            className="text-blue-600 hover:underline text-sm"
+          >
+            Forgot Password?
+          </button>
+        </div>
 
         <button
           type="submit"
@@ -66,6 +80,18 @@ function Login() {
         >
           Login
         </button>
+
+        <p className="text-center mt-5 text-gray-600">
+          Don't have an account?{" "}
+          <button
+            type="button"
+            onClick={() => navigate("/register")}
+            className="text-blue-600 hover:underline"
+          >
+            Register
+          </button>
+        </p>
+
       </form>
     </div>
   );
