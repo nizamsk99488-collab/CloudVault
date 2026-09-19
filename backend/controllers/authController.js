@@ -1,14 +1,7 @@
 const User = require("../models/User");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
-// Email transporter
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Register User
 const registerUser = async (req, res) => {
@@ -96,24 +89,35 @@ const forgotPassword = async (req, res) => {
 
     await user.save();
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
+    // Send OTP using Resend
+    const { error } = await resend.emails.send({
+      from: "CloudVault <onboarding@resend.dev>",
+      to: [email],
       subject: "CloudVault Password Reset OTP",
       html: `
-        <h2>CloudVault Password Reset</h2>
+        <div style="font-family: Arial, sans-serif;">
+          <h2>CloudVault Password Reset</h2>
 
-        <p>Your password reset OTP is:</p>
+          <p>Your password reset OTP is:</p>
 
-        <h1 style="letter-spacing: 5px;">
-          ${otp}
-        </h1>
+          <h1 style="letter-spacing: 5px;">
+            ${otp}
+          </h1>
 
-        <p>This OTP will expire in 10 minutes.</p>
+          <p>This OTP will expire in 10 minutes.</p>
 
-        <p>If you did not request this, ignore this email.</p>
+          <p>If you did not request this, ignore this email.</p>
+        </div>
       `,
     });
+
+    if (error) {
+      console.log("Resend Error:", error);
+
+      return res.status(500).json({
+        message: "Failed to send OTP",
+      });
+    }
 
     res.status(200).json({
       message: "OTP sent to your email",
