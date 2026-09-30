@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-const API_URL = "https://cloudvault-1cuo.onrender.com";
+
+const API_URL = "http://localhost:5000";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -16,7 +17,6 @@ function Dashboard() {
     }
   }, []);
 
-  // Fetch user's files
   const fetchFiles = async () => {
     try {
       const res = await axios.get(
@@ -29,19 +29,16 @@ function Dashboard() {
     }
   };
 
-  // Logout
   const handleLogout = () => {
     localStorage.removeItem("user");
     alert("Logged Out Successfully");
     navigate("/login");
   };
 
-  // Open file picker
   const handleUploadClick = () => {
     fileInputRef.current.click();
   };
 
-  // Upload file
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
 
@@ -61,13 +58,14 @@ function Dashboard() {
       fetchFiles();
     } catch (err) {
       console.log(err);
-      alert("File Upload Failed");
+      alert(
+        err.response?.data?.message || "File Upload Failed"
+      );
     }
 
     e.target.value = "";
   };
 
-  // Download file
   const handleDownload = (id) => {
     window.open(
       `${API_URL}/api/files/download/${id}`,
@@ -75,7 +73,6 @@ function Dashboard() {
     );
   };
 
-  // Delete file
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this file?"
@@ -163,18 +160,14 @@ function Dashboard() {
                   className="border rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                 >
 
-                  {/* File Name */}
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-2xl">
-                      📄
-                    </span>
+                    <span className="text-2xl">📄</span>
 
                     <span className="font-medium truncate">
                       {file.fileName}
                     </span>
                   </div>
 
-                  {/* Buttons */}
                   <div className="flex gap-2 w-full sm:w-auto">
 
                     <button
@@ -197,7 +190,7 @@ function Dashboard() {
 
             </div>
           )}
- 
+
         </div>
       </div>
     </div>

@@ -7,6 +7,10 @@ const uploadFile = async (req, res) => {
   try {
     const { userId } = req.body;
 
+    console.log("UPLOAD REQUEST");
+    console.log("User ID:", userId);
+    console.log("File:", req.file);
+
     if (!req.file) {
       return res.status(400).json({
         message: "No file uploaded",
@@ -19,12 +23,16 @@ const uploadFile = async (req, res) => {
       filePath: req.file.filename,
     });
 
+    console.log("File saved to MongoDB:", newFile);
+
     res.status(200).json({
       message: "File uploaded successfully",
       file: newFile,
     });
 
   } catch (error) {
+    console.log("UPLOAD ERROR:", error);
+
     res.status(500).json({
       message: error.message,
     });
@@ -41,6 +49,8 @@ const getFiles = async (req, res) => {
     res.status(200).json(files);
 
   } catch (error) {
+    console.log("GET FILES ERROR:", error);
+
     res.status(500).json({
       message: error.message,
     });
@@ -58,12 +68,33 @@ const downloadFile = async (req, res) => {
       });
     }
 
+    const fileLocation = path.join(
+      __dirname,
+      "../uploads",
+      file.filePath
+    );
+
+    console.log("Downloading:", fileLocation);
+
     res.download(
-      path.join(__dirname, "../uploads", file.filePath),
-      file.fileName
+      fileLocation,
+      file.fileName,
+      (error) => {
+        if (error) {
+          console.log("DOWNLOAD ERROR:", error);
+
+          if (!res.headersSent) {
+            res.status(500).json({
+              message: "File download failed",
+            });
+          }
+        }
+      }
     );
 
   } catch (error) {
+    console.log("DOWNLOAD ERROR:", error);
+
     res.status(500).json({
       message: error.message,
     });
@@ -81,7 +112,13 @@ const deleteFile = async (req, res) => {
       });
     }
 
-    const fileLocation = path.join(__dirname, "../uploads", file.filePath);
+    const fileLocation = path.join(
+      __dirname,
+      "../uploads",
+      file.filePath
+    );
+
+    console.log("Deleting:", fileLocation);
 
     if (fs.existsSync(fileLocation)) {
       fs.unlinkSync(fileLocation);
@@ -94,6 +131,8 @@ const deleteFile = async (req, res) => {
     });
 
   } catch (error) {
+    console.log("DELETE ERROR:", error);
+
     res.status(500).json({
       message: error.message,
     });
@@ -103,6 +142,6 @@ const deleteFile = async (req, res) => {
 module.exports = {
   uploadFile,
   getFiles,
-  downloadFile, 
+  downloadFile,
   deleteFile,
 };
