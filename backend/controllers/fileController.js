@@ -1,15 +1,32 @@
 const File = require("../models/File");
-const fs = require("fs");
-const path = require("path");
+const { v2: cloudinary } = require("cloudinary");
+
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Upload buffer to Cloudinary
+const uploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { resource_type: "auto" },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+
+    stream.end(buffer);
+  });
+};
 
 // Upload File
 const uploadFile = async (req, res) => {
   try {
     const { userId } = req.body;
-
-    console.log("UPLOAD REQUEST");
-    console.log("User ID:", userId);
-    console.log("File:", req.file);
 
     if (!req.file) {
       return res.status(400).json({
@@ -17,19 +34,26 @@ const uploadFile = async (req, res) => {
       });
     }
 
+    if (!userId) {
+      return res.status(400).json({
+        message: "User ID is required",
+      });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer);
+
     const newFile = await File.create({
       userId,
       fileName: req.file.originalname,
-      filePath: req.file.filename,
+      filePath: result.secure_url,
+      cloudinaryPublicId: result.public_id,
+      resourceType: result.resource_type,
     });
-
-    console.log("File saved to MongoDB:", newFile);
 
     res.status(200).json({
       message: "File uploaded successfully",
       file: newFile,
     });
-
   } catch (error) {
     console.log("UPLOAD ERROR:", error);
 
@@ -43,11 +67,9 @@ const uploadFile = async (req, res) => {
 const getFiles = async (req, res) => {
   try {
     const { userId } = req.query;
-
     const files = await File.find({ userId });
 
     res.status(200).json(files);
-
   } catch (error) {
     console.log("GET FILES ERROR:", error);
 
@@ -68,30 +90,13 @@ const downloadFile = async (req, res) => {
       });
     }
 
-    const fileLocation = path.join(
-      __dirname,
-      "../uploads",
-      file.filePath
-    );
+    if (!file.filePath) {
+      return res.status(404).json({
+        message: "File URL not found",
+      });
+    }
 
-    console.log("Downloading:", fileLocation);
-
-    res.download(
-      fileLocation,
-      file.fileName,
-      (error) => {
-        if (error) {
-          console.log("DOWNLOAD ERROR:", error);
-
-          if (!res.headersSent) {
-            res.status(500).json({
-              message: "File download failed",
-            });
-          }
-        }
-      }
-    );
-
+    res.redirect(file.filePath);
   } catch (error) {
     console.log("DOWNLOAD ERROR:", error);
 
@@ -112,16 +117,10 @@ const deleteFile = async (req, res) => {
       });
     }
 
-    const fileLocation = path.join(
-      __dirname,
-      "../uploads",
-      file.filePath
-    );
-
-    console.log("Deleting:", fileLocation);
-
-    if (fs.existsSync(fileLocation)) {
-      fs.unlinkSync(fileLocation);
+    if (file.cloudinaryPublicId) {
+      await cloudinary.uploader.destroy(file.cloudinaryPublicId, {
+        resource_type: file.resourceType || "image",
+      });
     }
 
     await File.findByIdAndDelete(req.params.id);
@@ -129,7 +128,6 @@ const deleteFile = async (req, res) => {
     res.status(200).json({
       message: "File deleted successfully",
     });
-
   } catch (error) {
     console.log("DELETE ERROR:", error);
 

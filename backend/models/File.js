@@ -17,6 +17,16 @@ const fileSchema = new mongoose.Schema({
     required: true,
   },
 
+  cloudinaryPublicId: {
+    type: String,
+    default: null,
+  },
+
+  resourceType: {
+    type: String,
+    default: "image",
+  },
+
   uploadedAt: {
     type: Date,
     default: Date.now,
